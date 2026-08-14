@@ -17,7 +17,6 @@ void drawRectangle(float left, float bottom, float right, float top)
 void drawLaneMarking(float x1, float y1, float x2, float y2)
 {
     glColor3f(1.0f, 1.0f, 1.0f);
-
     drawRectangle(x1, y1, x2, y2);
 }
 
@@ -30,6 +29,18 @@ void drawHorizontalCrosswalk(float startX, float y)
         float x = startX + i * 4;
 
         drawRectangle(x, y, x + 2, y + 8);
+    }
+}
+
+void drawVerticalCrosswalk(float x, float startY)
+{
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    for (int i = 0; i < 6; i++)
+    {
+        float y = startY + i * 4;
+
+        drawRectangle(x, y, x + 8, y + 2);
     }
 }
 
@@ -52,7 +63,7 @@ void drawCircle(float cx, float cy, float radius)
     glEnd();
 }
 
-void drawTrafficLight(float x, float y)
+void drawTrafficLight(float x, float y, int activeLight)
 {
     // Pole
     glColor3f(0.1f, 0.1f, 0.1f);
@@ -62,22 +73,34 @@ void drawTrafficLight(float x, float y)
     drawRectangle(x - 5, y, x + 5, y + 18);
 
     // Red
+    if (activeLight == 0)
     glColor3f(1.0f, 0.0f, 0.0f);
+    else
+        glColor3f(0.3f, 0.0f, 0.0f);
+
     drawCircle(x, y + 14, 2.5f);
 
     // Yellow
-    glColor3f(1.0f, 1.0f, 0.0f);
+    if (activeLight == 1)
+        glColor3f(1.0f, 1.0f, 0.0f);
+    else
+        glColor3f(0.3f, 0.3f, 0.0f);
+
     drawCircle(x, y + 9, 2.5f);
 
     // Green
-    glColor3f(0.0f, 1.0f, 0.0f);
+    if (activeLight == 2)
+        glColor3f(0.0f, 1.0f, 0.0f);
+    else
+        glColor3f(0.0f, 0.3f, 0.0f);
+
     drawCircle(x, y + 4, 2.5f);
 }
 
-void drawCar(float x, float y)
+void drawCar(float x, float y, float r, float g, float b)
 {
     // Body
-    glColor3f(0.8f, 0.1f, 0.1f);
+    glColor3f(r, g, b);
 
     drawRectangle(x, y, x + 12, y + 6);
 
@@ -141,26 +164,29 @@ void display()
     drawRectangle(25, -32, 100, -25);
 
     // LANE MARKINGS
-    drawLaneMarking(-90, -2, -60, 2);
-    drawLaneMarking(-50, -2, -20, 2);
-    drawLaneMarking(20, -2, 50, 2);
-    drawLaneMarking(60, -2, 90, 2);
+    drawLaneMarking(-90, -1, -60, 1);
+    drawLaneMarking(-50, -1, -20, 1);
+    drawLaneMarking(20, -1, 50, 1);
+    drawLaneMarking(60, -1, 90, 1);
 
-    drawLaneMarking(-2, 60, 2, 90);
-    drawLaneMarking(-2, 20, 2, 50);
-    drawLaneMarking(-2, -50, 2, -20);
-    drawLaneMarking(-2, -90, 2, -60);
+    //vertical
+    drawLaneMarking(-1, 60, 1, 90);
+    drawLaneMarking(-1, 20, 1, 50);
+    drawLaneMarking(-1, -50, 1, -20);
+    drawLaneMarking(-1, -90, 1, -60);
 
     // ZEBRA CROSSINGS
     drawHorizontalCrosswalk(-12, 27);
     drawHorizontalCrosswalk(-12, -35);
+    drawVerticalCrosswalk(27, -12);
+    drawVerticalCrosswalk(-35, -12);
 
     //TrafficLight
-    drawTrafficLight(30, 30);
+    drawTrafficLight(30, 30, 2); //0=red,1=yellow,2=green
 
     //Car
-    drawCar(-60, -10);
-    drawCar(30, 10);
+    drawCar(-60, -10, 0.8f, 0.1f, 0.1f);
+    drawCar(30, 10, 0.1f, 0.3f, 0.8f);
 
     glFlush();
 }
