@@ -44,10 +44,8 @@ void drawRectangle(float left, float bottom, float right, float top)
 void drawLaneMarking(float x1, float y1, float x2, float y2)
 {
     glColor3f(1.0f, 1.0f, 1.0f);
-
     drawRectangle(x1, y1, x2, y2);
 }
-
 
 // ================= CROSSWALK =================
 
@@ -62,7 +60,17 @@ void drawHorizontalCrosswalk(float startX, float y)
         drawRectangle(x, y, x + 2, y + 8);
     }
 }
+void drawVerticalCrosswalk(float x, float startY)
+{
+    glColor3f(1.0f, 1.0f, 1.0f);
 
+    for (int i = 0; i < 6; i++)
+    {
+        float y = startY + i * 4;
+
+        drawRectangle(x, y, x + 8, y + 2);
+    }
+}
 
 // ================= CIRCLE =================
 
@@ -126,10 +134,10 @@ void drawTrafficLight(float x, float y)
 
 // ================= CAR =================
 
-void drawCar(float x, float y)
+void drawCar(float x, float y, float r, float g, float b)
 {
     // Body
-    glColor3f(0.8f, 0.1f, 0.1f);
+    glColor3f(r, g, b);
 
     drawRectangle(x, y, x + 12, y + 6);
 
@@ -392,70 +400,57 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0f, 1.0f, 1.0f);
 
-
     // Horizontal road
-
     glColor3f(0.2f, 0.2f, 0.2f);
-
     drawRectangle(-100, -25, 100, 25);
-
-
     // Vertical road
-
     drawRectangle(-25, -100, 25, 100);
-
 
     // Sidewalks
 
     glColor3f(0.7f, 0.7f, 0.7f);
-
     // Top-left
     drawRectangle(-100, 25, -25, 32);
-
     // Top-right
     drawRectangle(25, 25, 100, 32);
-
     // Bottom-left
     drawRectangle(-100, -32, -25, -25);
-
     // Bottom-right
     drawRectangle(25, -32, 100, -25);
 
 
     // LANE MARKINGS
 
-    drawLaneMarking(-90, -2, -60, 2);
-    drawLaneMarking(-50, -2, -20, 2);
-    drawLaneMarking(20, -2, 50, 2);
-    drawLaneMarking(60, -2, 90, 2);
+    drawLaneMarking(-90, -1, -60, 1);
+    drawLaneMarking(-50, -1, -20, 1);
+    drawLaneMarking(20, -1, 50, 1);
+    drawLaneMarking(60, -1, 90, 1);
 
-    drawLaneMarking(-2, 60, 2, 90);
-    drawLaneMarking(-2, 20, 2, 50);
-    drawLaneMarking(-2, -50, 2, -20);
-    drawLaneMarking(-2, -90, 2, -60);
+    //vertical
+    drawLaneMarking(-1, 60, 1, 90);
+    drawLaneMarking(-1, 20, 1, 50);
+    drawLaneMarking(-1, -50, 1, -20);
+    drawLaneMarking(-1, -90, 1, -60);
 
 
     // ZEBRA CROSSINGS
-
     drawHorizontalCrosswalk(-12, 27);
     drawHorizontalCrosswalk(-12, -35);
-
+    drawVerticalCrosswalk(27, -12);
+    drawVerticalCrosswalk(-35, -12);
 
     // Traffic Light
 
     drawTrafficLight(30, 30);
 
-
     // ================= THREE CARS =================
 
-    drawCar(car1, -10);
-    drawCar(car2, -10);
-    drawCar(car3, 10);
-
+    drawCar(car1, -10, 0.8f, 0.1f, 0.1f);   // Red car
+    drawCar(car2, -10, 0.1f, 0.3f, 0.8f);   // Blue car
+    drawCar(car3, 10, 0.1f, 0.7f, 0.2f);    // Green car
 
     glFlush();
 }
-
 
 // ================= INIT =================
 
