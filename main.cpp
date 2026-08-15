@@ -235,206 +235,520 @@ void drawMicrobus(float x, float y)
 }
 
 
-// ================= MOVE HORIZONTAL CARS =================
+// ============================================================
+// CHECK HORIZONTAL CAR SPACING
+// ============================================================
 
-void moveHorizontalCars()
+bool horizontalCarHasSpace(float newX, int currentCar)
 {
-    float speed = 0;
+    float gap = 16.0f;
 
-    if (light == 0)
-        speed = 0;
-
-    if (light == 1)
-        speed = 0.2f;
-
-    if (light == 2)
-        speed = 0.5f;
-
-
-    if (automatic == true &&
-        moveCar == true &&
-        pauseGame == false)
+    // CAR 1 AND CAR 2 ARE IN THE LOWER LANE
+    if (currentCar == 1)
     {
-        // If the car is already inside the intersection,
-        // allow it to leave completely.
-
-        if (light == 2)
-        {
-            car1 += speed;
-            car2 += speed;
-            car3 += speed;
-        }
-        else
-        {
-            // Car 1
-            if (car1 < -37 || car1 > 25)
-                car1 += speed;
-
-            // Car 2
-            if (car2 < -37 || car2 > 25)
-                car2 += speed;
-
-            // Car 3
-            if (car3 > 25)
-                car3 += speed;
-        }
+        if (car2 > newX && car2 - newX < gap)
+            return false;
     }
 
+    if (currentCar == 2)
+    {
+        if (car1 > newX && car1 - newX < gap)
+            return false;
+    }
 
-    // Reset after leaving screen
+    // CAR 3 IS IN THE UPPER LANE
+    // Therefore it does NOT collide with car1 or car2.
+    if (currentCar == 3)
+    {
+        return true;
+    }
 
-    if (car1 > 100)
-        car1 = -100;
-
-    if (car2 > 100)
-        car2 = -100;
-
-    if (car3 > 100)
-        car3 = -100;
+    return true;
 }
 
 
-// ================= MOVE VERTICAL VEHICLES =================
+// ============================================================
+// MOVE HORIZONTAL CARS
+// ============================================================
+
+void moveHorizontalCars()
+{
+    if (automatic == false ||
+        moveCar == false ||
+        pauseGame == true)
+    {
+        return;
+    }
+
+    float normalSpeed = 0.5f;
+    float yellowSpeed = 0.2f;
+
+    // Stop line
+    float stopLine = -37.0f;
+
+
+    // ========================================================
+    // EMERGENCY MODE
+    // ========================================================
+
+    if (emergency == true)
+    {
+        // Normal cars move slower so ambulance can pass.
+        float emergencyTrafficSpeed = 0.25f;
+
+        // ----------------------------------------------------
+        // CAR 1
+        // ----------------------------------------------------
+
+        float newCar1 = car1 + emergencyTrafficSpeed;
+
+        if (horizontalCarHasSpace(newCar1, 1))
+            car1 = newCar1;
+
+
+        // ----------------------------------------------------
+        // CAR 2
+        // ----------------------------------------------------
+
+        float newCar2 = car2 + emergencyTrafficSpeed;
+
+        if (horizontalCarHasSpace(newCar2, 2))
+            car2 = newCar2;
+
+
+        // ----------------------------------------------------
+        // CAR 3
+        // ----------------------------------------------------
+        // Green car is on another lane, so ambulance does not
+        // interact with it.
+
+        float newCar3 = car3 + emergencyTrafficSpeed;
+
+        car3 = newCar3;
+
+
+        // ----------------------------------------------------
+        // RESET CARS
+        // ----------------------------------------------------
+
+        if (car1 > 105)
+            car1 = -105;
+
+        if (car2 > 105)
+            car2 = -105;
+
+        if (car3 > 105)
+            car3 = -105;
+
+        return;
+    }
+
+
+    // ========================================================
+    // NORMAL TRAFFIC
+    // ========================================================
+
+    float speed;
+
+    if (light == 0)
+    {
+        speed = normalSpeed;
+    }
+    else if (light == 1)
+    {
+        speed = yellowSpeed;
+    }
+    else
+    {
+        speed = normalSpeed;
+    }
+
+
+    // ========================================================
+    // CAR 1
+    // ========================================================
+
+    float newX1 = car1 + speed;
+
+    bool allowedCar1 = true;
+
+    // Red or Yellow:
+    // Stop only if car has NOT crossed the stop line.
+    if (light != 2)
+    {
+        if (car1 < stopLine &&
+            newX1 >= stopLine)
+        {
+            allowedCar1 = false;
+        }
+
+        if (car1 >= stopLine)
+        {
+            allowedCar1 = true;
+        }
+    }
+
+    if (allowedCar1 &&
+        horizontalCarHasSpace(newX1, 1))
+    {
+        car1 = newX1;
+    }
+
+
+    // ========================================================
+    // CAR 2
+    // ========================================================
+
+    float newX2 = car2 + speed;
+
+    bool allowedCar2 = true;
+
+    if (light != 2)
+    {
+        if (car2 < stopLine &&
+            newX2 >= stopLine)
+        {
+            allowedCar2 = false;
+        }
+
+        if (car2 >= stopLine)
+        {
+            allowedCar2 = true;
+        }
+    }
+
+    if (allowedCar2 &&
+        horizontalCarHasSpace(newX2, 2))
+    {
+        car2 = newX2;
+    }
+
+
+    // ========================================================
+    // CAR 3
+    // ========================================================
+    // Green car is in the upper lane.
+    // It has its own lane spacing.
+
+    float newX3 = car3 + speed;
+
+    bool allowedCar3 = true;
+
+    if (light != 2)
+    {
+        if (car3 < stopLine &&
+            newX3 >= stopLine)
+        {
+            allowedCar3 = false;
+        }
+
+        if (car3 >= stopLine)
+        {
+            allowedCar3 = true;
+        }
+    }
+
+    if (allowedCar3)
+    {
+        car3 = newX3;
+    }
+
+
+    // ========================================================
+    // RESET AFTER LEAVING SCREEN
+    // ========================================================
+
+    if (car1 > 105)
+    {
+        if (car2 < -85)
+            car1 = -105;
+    }
+
+    if (car2 > 105)
+    {
+        if (car1 < -85)
+            car2 = -105;
+    }
+
+    if (car3 > 105)
+    {
+        car3 = -105;
+    }
+}
+
+
+// ============================================================
+// MOVE VERTICAL VEHICLES
+// ============================================================
 
 void moveVerticalVehicles()
 {
-    float speed = 0;
+    if (automatic == false ||
+        moveCar == false ||
+        pauseGame == true)
+    {
+        return;
+    }
+
+    float speed = 0.0f;
 
     if (verticalLight == 0)
-        speed = 0;
-
-    if (verticalLight == 1)
-        speed = 0.2f;
-
-    if (verticalLight == 2)
-        speed = 0.5f;
-
-
-    if (automatic == true &&
-        moveCar == true &&
-        pauseGame == false)
     {
-        // BUS MOVES UP
+        speed = 0.0f;
+    }
+    else if (verticalLight == 1)
+    {
+        speed = 0.2f;
+    }
+    else
+    {
+        speed = 0.5f;
+    }
 
-        if (verticalLight == 2)
+
+    // ========================================================
+    // BUS MOVES UP
+    // ========================================================
+
+    if (speed > 0.0f)
+    {
+        float newY = busY + speed;
+
+        bool allowedByLight = true;
+
+        if (verticalLight != 2 &&
+            busY < -44 &&
+            newY > -44)
         {
-            busY += speed;
+            allowedByLight = false;
         }
-        else
+
+        if (allowedByLight)
         {
-            // If already near/inside intersection,
-            // keep moving until it clears.
-
-            if (busY < -37 || busY > 25)
-                busY += speed;
-        }
-
-
-        // MICROBUS MOVES DOWN
-
-        if (verticalLight == 2)
-        {
-            microbusY -= speed;
-        }
-        else
-        {
-            if (microbusY > 37 || microbusY < -25)
-                microbusY -= speed;
+            busY = newY;
         }
     }
 
 
-    // Reset bus
+    // ========================================================
+    // MICROBUS MOVES DOWN
+    // ========================================================
+
+    if (speed > 0.0f)
+    {
+        float newY = microbusY - speed;
+
+        bool allowedByLight = true;
+
+        if (verticalLight != 2 &&
+            microbusY > 40 &&
+            newY < 40)
+        {
+            allowedByLight = false;
+        }
+
+        if (allowedByLight)
+        {
+            microbusY = newY;
+        }
+    }
+
+
+    // ========================================================
+    // BUS RESET
+    // ========================================================
 
     if (busY > 110)
         busY = -110;
 
 
-    // Reset microbus
+    // ========================================================
+    // MICROBUS RESET
+    // ========================================================
 
     if (microbusY < -110)
         microbusY = 110;
 }
 
 
-// ================= EMERGENCY =================
+// ============================================================
+// EMERGENCY VEHICLE
+// ============================================================
 
 void moveEmergency()
 {
-    if (emergency == true &&
-        pauseGame == false)
+    if (emergency == false ||
+        pauseGame == true)
     {
-        emergencyX += 0.8f;
+        return;
+    }
 
-        if (emergencyX > 110)
-        {
-            emergency = false;
-            emergencyX = -100;
+    float emergencySpeed = 0.8f;
 
-            // Normal traffic resumes
-            light = 0;
-            verticalLight = 2;
-            lightCount = 0;
-        }
+    bool blocked = false;
+
+    // Ambulance is on LOWER lane.
+    float ambulanceFront = emergencyX + 18.0f;
+
+    float safeDistance = 17.0f;
+
+
+    // ========================================================
+    // CHECK CAR 1
+    // ========================================================
+
+    if (car1 > emergencyX &&
+        car1 - ambulanceFront < safeDistance)
+    {
+        blocked = true;
+    }
+
+
+    // ========================================================
+    // CHECK CAR 2
+    // ========================================================
+
+    if (car2 > emergencyX &&
+        car2 - ambulanceFront < safeDistance)
+    {
+        blocked = true;
+    }
+
+
+    // ========================================================
+    // CAR 3 IS ON OTHER LANE
+    // ========================================================
+    // Therefore it is NOT considered an obstacle for ambulance.
+
+
+    // ========================================================
+    // MOVE AMBULANCE
+    // ========================================================
+
+    if (blocked == false)
+    {
+        emergencyX += emergencySpeed;
+    }
+
+
+    // ========================================================
+    // EMERGENCY FINISHED
+    // ========================================================
+
+    if (emergencyX > 110)
+    {
+        emergency = false;
+
+        emergencyX = -100;
+
+        // Start normal cycle again from RED.
+        light = 0;
+        verticalLight = 2;
+
+        lightCount = 0;
     }
 }
 
 
-// ================= TIMER =================
+// ============================================================
+// TIMER
+// ============================================================
 
 void timer(int value)
 {
-    moveHorizontalCars();
-    moveVerticalVehicles();
-    moveEmergency();
-
-    moveSun();
-    moveMoon();
-
-    // ================= EMERGENCY PRIORITY =================
+    // ========================================================
+    // EMERGENCY MODE
+    // ========================================================
 
     if (emergency == true)
     {
-        // Horizontal side gets green
+        // Emergency gets priority.
         light = 2;
-
-        // Vertical side gets red
         verticalLight = 0;
+
+        moveHorizontalCars();
+        moveVerticalVehicles();
+        moveEmergency();
     }
+
+
+    // ========================================================
+    // NORMAL MODE
+    // ========================================================
+
     else
     {
+        // Count always starts from the current light state.
         lightCount++;
 
-        // RED -> GREEN
-        if (light == 0 && lightCount >= 100)
+
+        // ====================================================
+        // RED
+        // ====================================================
+
+        if (light == 0)
         {
-            light = 2;
-            verticalLight = 0;
-
-            lightCount = 0;
-        }
-
-        // GREEN -> YELLOW
-        if (light == 2 && lightCount >= 200)
-        {
-            light = 1;
-            verticalLight = 0;
-
-            lightCount = 0;
-        }
-
-        // YELLOW -> RED
-        if (light == 1 && lightCount >= 50)
-        {
-            light = 0;
-
-            // Vertical becomes GREEN
             verticalLight = 2;
 
-            lightCount = 0;
+            // RED = 100 timer cycles
+            if (lightCount >= 100)
+            {
+                light = 2;
+
+                verticalLight = 0;
+
+                lightCount = 0;
+            }
         }
+
+
+        // ====================================================
+        // GREEN
+        // ====================================================
+
+        else if (light == 2)
+        {
+            verticalLight = 0;
+
+            // GREEN = 200 timer cycles
+            if (lightCount >= 200)
+            {
+                light = 1;
+
+                verticalLight = 0;
+
+                lightCount = 0;
+            }
+        }
+
+
+        // ====================================================
+        // YELLOW
+        // ====================================================
+
+        else if (light == 1)
+        {
+            verticalLight = 0;
+
+            // YELLOW = 50 timer cycles
+            if (lightCount >= 50)
+            {
+                light = 0;
+
+                verticalLight = 2;
+
+                lightCount = 0;
+            }
+        }
+
+
+        moveHorizontalCars();
+        moveVerticalVehicles();
     }
 
+
+    moveSun();
+    moveMoon();
 
     glutPostRedisplay();
 
@@ -442,13 +756,14 @@ void timer(int value)
 }
 
 
-// ================= KEYBOARD =================
+// ============================================================
+// KEYBOARD
+// ============================================================
 
 void keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-        // AUTOMATIC MODE
         case 'a':
         case 'A':
 
@@ -457,7 +772,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // MANUAL MODE
         case 'm':
         case 'M':
 
@@ -466,7 +780,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // SELECT CAR 1
         case '1':
 
             selectedCar = 1;
@@ -474,7 +787,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // SELECT CAR 2
         case '2':
 
             selectedCar = 2;
@@ -482,7 +794,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // SELECT CAR 3
         case '3':
 
             selectedCar = 3;
@@ -490,7 +801,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // STOP
         case 's':
         case 'S':
 
@@ -499,7 +809,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // START
         case 'g':
         case 'G':
 
@@ -508,7 +817,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // PAUSE / RESUME
         case 'p':
         case 'P':
 
@@ -517,14 +825,15 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // RESET
         case 'r':
         case 'R':
 
+            // Reset horizontal cars
             car1 = -80;
             car2 = -40;
             car3 = 20;
 
+            // Reset vertical vehicles
             busY = 80;
             microbusY = -80;
 
@@ -535,17 +844,20 @@ void keyboard(unsigned char key, int x, int y)
 
             automatic = true;
 
+            // Reset emergency
             emergency = false;
             emergencyX = -100;
 
+            // Reset traffic lights
             light = 0;
             verticalLight = 2;
+
+            // Reset timer
             lightCount = 0;
 
             break;
 
 
-        // NIGHT MODE
         case 'n':
         case 'N':
 
@@ -554,17 +866,17 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // EMERGENCY
         case 'e':
         case 'E':
 
             emergency = true;
 
-            // Emergency starts from left
             emergencyX = -100;
 
-            // Give horizontal road priority
+            // Emergency gets green light
             light = 2;
+
+            // Other road gets red
             verticalLight = 0;
 
             lightCount = 0;
@@ -572,7 +884,6 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
 
-        // EXIT
         case 27:
 
             exit(0);
@@ -582,14 +893,15 @@ void keyboard(unsigned char key, int x, int y)
 }
 
 
-// ================= MANUAL CONTROL =================
+// ============================================================
+// MANUAL CONTROL
+// ============================================================
 
 void specialKeyboard(int key, int x, int y)
 {
-    if (automatic == false && pauseGame == false)
+    if (automatic == false &&
+        pauseGame == false)
     {
-        // RIGHT ARROW
-
         if (key == GLUT_KEY_RIGHT)
         {
             if (selectedCar == 1)
@@ -602,8 +914,6 @@ void specialKeyboard(int key, int x, int y)
                 car3 = car3 + 2;
         }
 
-
-        // LEFT ARROW
 
         if (key == GLUT_KEY_LEFT)
         {
@@ -622,7 +932,9 @@ void specialKeyboard(int key, int x, int y)
 }
 
 
-// ================= DISPLAY =================
+// ============================================================
+// DISPLAY
+// ============================================================
 
 void display()
 {
@@ -640,7 +952,9 @@ void display()
     glColor3f(1.0f, 1.0f, 1.0f);
 
 
+    // ========================================================
     // SUN / MOON
+    // ========================================================
 
     if (nightMode)
     {
@@ -652,7 +966,9 @@ void display()
     }
 
 
+    // ========================================================
     // ENVIRONMENT
+    // ========================================================
 
     drawPark(-100, -100);
     drawSchool(-80, -65);
@@ -665,36 +981,40 @@ void display()
     drawParkTree(-35, -85);
 
 
-    // ================= HORIZONTAL ROAD =================
+    // ========================================================
+    // HORIZONTAL ROAD
+    // ========================================================
 
     glColor3f(0.2f, 0.2f, 0.2f);
 
     drawRectangle(-100, -25, 100, 25);
 
 
-    // ================= VERTICAL ROAD =================
+    // ========================================================
+    // VERTICAL ROAD
+    // ========================================================
 
     drawRectangle(-25, -100, 25, 100);
 
 
-    // ================= SIDEWALKS =================
+    // ========================================================
+    // SIDEWALKS
+    // ========================================================
 
     glColor3f(0.7f, 0.7f, 0.7f);
 
-    // Top-left
     drawRectangle(-100, 25, -25, 32);
 
-    // Top-right
     drawRectangle(25, 25, 100, 32);
 
-    // Bottom-left
     drawRectangle(-100, -32, -25, -25);
 
-    // Bottom-right
     drawRectangle(25, -32, 100, -25);
 
 
-    // ================= ENVIRONMENT =================
+    // ========================================================
+    // ENVIRONMENT BUILDINGS
+    // ========================================================
 
     drawOfficeBuilding(-90, 32);
     drawHouse(-60, 32);
@@ -702,7 +1022,9 @@ void display()
     drawShop(70, 32);
 
 
-    // ================= LANE MARKINGS =================
+    // ========================================================
+    // LANE MARKINGS
+    // ========================================================
 
     drawLaneMarking(-90, -1, -60, 1);
     drawLaneMarking(-50, -1, -20, 1);
@@ -718,7 +1040,9 @@ void display()
     drawLaneMarking(-1, -90, 1, -60);
 
 
-    // ================= ZEBRA CROSSINGS =================
+    // ========================================================
+    // ZEBRA CROSSINGS
+    // ========================================================
 
     drawHorizontalCrosswalk(-12, 27);
     drawHorizontalCrosswalk(-12, -35);
@@ -727,25 +1051,34 @@ void display()
     drawVerticalCrosswalk(-35, -12);
 
 
-    // ================= TRAFFIC LIGHTS =================
+    // ========================================================
+    // TRAFFIC LIGHTS
+    // ========================================================
 
-    // Horizontal traffic light
+    // Horizontal traffic light - upper right
     drawTrafficLight(30, 30, light);
 
-    // Vertical traffic light
-    drawTrafficLight(-30, 30, verticalLight);
+    // Vertical traffic light - opposite lower left
+    drawTrafficLight(-35, -15, verticalLight);
 
 
-    // ================= HORIZONTAL CARS =================
+    // ========================================================
+    // HORIZONTAL CARS
+    // ========================================================
 
+    // Red car - lower lane
     drawCar(car1, -10, 0.8f, 0.1f, 0.1f);
 
+    // Blue car - lower lane
     drawCar(car2, -10, 0.1f, 0.3f, 0.8f);
 
-    drawCar(car3, -10, 0.1f, 0.7f, 0.2f);
+    // Green car - upper lane
+    drawCar(car3, 3, 0.1f, 0.7f, 0.2f);
 
 
-    // ================= VERTICAL VEHICLES =================
+    // ========================================================
+    // VERTICAL VEHICLES
+    // ========================================================
 
     // LEFT SIDE OF VERTICAL ROAD
     drawBus(-18, busY);
@@ -754,7 +1087,9 @@ void display()
     drawMicrobus(5, microbusY);
 
 
-    // ================= EMERGENCY VEHICLE =================
+    // ========================================================
+    // EMERGENCY VEHICLE
+    // ========================================================
 
     if (emergency == true)
     {
@@ -766,7 +1101,9 @@ void display()
 }
 
 
-// ================= INIT =================
+// ============================================================
+// INIT
+// ============================================================
 
 void init()
 {
@@ -780,7 +1117,9 @@ void init()
 }
 
 
-// ================= MAIN =================
+// ============================================================
+// MAIN
+// ============================================================
 
 int main(int argc, char** argv)
 {
