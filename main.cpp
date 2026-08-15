@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <GL/glut.h>
 #include <math.h>
+#include "DayNight.h"
 
 // ================= CAR VARIABLES =================
 
@@ -92,7 +93,6 @@ void drawCircle(float cx, float cy, float radius)
 
     glEnd();
 }
-
 
 // ================= TRAFFIC LIGHT =================
 
@@ -217,6 +217,8 @@ void moveCars()
 void timer(int value)
 {
     moveCars();
+    moveSun();
+    moveMoon();
 
     lightCount++;
 
@@ -342,6 +344,15 @@ void keyboard(unsigned char key, int x, int y)
 
             break;
 
+        //Nightmode
+
+        case 'n':
+        case 'N':
+
+             toggleNight();
+
+             break;
+
 
         // EXIT
         case 27:
@@ -397,8 +408,36 @@ void specialKeyboard(int key, int x, int y)
 
 void display()
 {
+    if (nightMode)
+    {
+        glClearColor(0.03f, 0.05f, 0.15f, 1.0f);
+    }
+    else
+    {
+        glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
+    }
+
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0f, 1.0f, 1.0f);
+
+    if (nightMode)
+    {
+        drawMoon(moonX, moonY);
+    }
+    else
+    {
+        drawSun(sunX, sunY);
+    }
+
+    drawPark(-100, -100);
+    drawSchool(-80, -65);
+    drawLake(25,-100);
+
+    drawParkTree(-92, -45);
+    drawParkTree(-35, -45);
+
+    drawParkTree(-92, -85);
+    drawParkTree(-35, -85);
 
     // Horizontal road
     glColor3f(0.2f, 0.2f, 0.2f);
@@ -417,6 +456,12 @@ void display()
     drawRectangle(-100, -32, -25, -25);
     // Bottom-right
     drawRectangle(25, -32, 100, -25);
+
+    //Environment
+    drawOfficeBuilding(-90, 32);
+    drawHouse(-60,32);
+    drawApartment(35,32);
+    drawShop(70,32);
 
 
     // LANE MARKINGS
@@ -448,6 +493,7 @@ void display()
     drawCar(car1, -10, 0.8f, 0.1f, 0.1f);   // Red car
     drawCar(car2, -10, 0.1f, 0.3f, 0.8f);   // Blue car
     drawCar(car3, 10, 0.1f, 0.7f, 0.2f);    // Green car
+
 
     glFlush();
 }
