@@ -2,6 +2,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include "DayNight.h"
+#include "emergency.h"
 
 // ================= CAR VARIABLES =================
 
@@ -16,13 +17,28 @@ bool pauseGame = false;
 
 bool automatic = true;
 
-// Traffic light
+// ================= VERTICAL VEHICLES =================
+
+float busY = 80;
+float microbusY = -80;
+
+// ================= EMERGENCY =================
+
+bool emergency = false;
+float emergencyX = -100;
+
+// ================= TRAFFIC LIGHT =================
+
+// Horizontal road
 // 0 = Red
 // 1 = Yellow
 // 2 = Green
 
 int light = 0;
 int lightCount = 0;
+
+// Vertical road
+int verticalLight = 2;
 
 
 // ================= DRAW RECTANGLE =================
@@ -48,6 +64,7 @@ void drawLaneMarking(float x1, float y1, float x2, float y2)
     drawRectangle(x1, y1, x2, y2);
 }
 
+
 // ================= CROSSWALK =================
 
 void drawHorizontalCrosswalk(float startX, float y)
@@ -61,6 +78,8 @@ void drawHorizontalCrosswalk(float startX, float y)
         drawRectangle(x, y, x + 2, y + 8);
     }
 }
+
+
 void drawVerticalCrosswalk(float x, float startY)
 {
     glColor3f(1.0f, 1.0f, 1.0f);
@@ -72,6 +91,7 @@ void drawVerticalCrosswalk(float x, float startY)
         drawRectangle(x, y, x + 8, y + 2);
     }
 }
+
 
 // ================= CIRCLE =================
 
@@ -94,36 +114,37 @@ void drawCircle(float cx, float cy, float radius)
     glEnd();
 }
 
+
 // ================= TRAFFIC LIGHT =================
 
-void drawTrafficLight(float x, float y)
+void drawTrafficLight(float x, float y, int currentLight)
 {
     // Pole
     glColor3f(0.1f, 0.1f, 0.1f);
     drawRectangle(x - 1, y - 15, x + 1, y);
 
-    // Traffic light box
+    // Box
     glColor3f(0.1f, 0.1f, 0.1f);
     drawRectangle(x - 5, y, x + 5, y + 18);
 
-    // Red
-    if (light == 0)
+    // RED
+    if (currentLight == 0)
         glColor3f(1.0f, 0.0f, 0.0f);
     else
         glColor3f(0.3f, 0.0f, 0.0f);
 
     drawCircle(x, y + 14, 2.5f);
 
-    // Yellow
-    if (light == 1)
+    // YELLOW
+    if (currentLight == 1)
         glColor3f(1.0f, 1.0f, 0.0f);
     else
         glColor3f(0.3f, 0.3f, 0.0f);
 
     drawCircle(x, y + 9, 2.5f);
 
-    // Green
-    if (light == 2)
+    // GREEN
+    if (currentLight == 2)
         glColor3f(0.0f, 1.0f, 0.0f);
     else
         glColor3f(0.0f, 0.3f, 0.0f);
@@ -158,56 +179,203 @@ void drawCar(float x, float y, float r, float g, float b)
 }
 
 
-// ================= MOVE THREE CARS =================
+// ================= RED BLACK BUS =================
 
-void moveCars()
+void drawBus(float x, float y)
+{
+    // Main body
+    glColor3f(0.05f, 0.05f, 0.05f);
+    drawRectangle(x, y, x + 8, y + 18);
+
+    // Red upper part
+    glColor3f(0.8f, 0.0f, 0.0f);
+    drawRectangle(x, y + 13, x + 8, y + 18);
+
+    // Windows
+    glColor3f(0.2f, 0.6f, 0.8f);
+
+    drawRectangle(x + 1, y + 9, x + 7, y + 12);
+    drawRectangle(x + 1, y + 5, x + 7, y + 8);
+
+    // Wheels
+    glColor3f(0.02f, 0.02f, 0.02f);
+
+    drawCircle(x + 1, y + 2, 1.3f);
+    drawCircle(x + 7, y + 2, 1.3f);
+}
+
+
+// ================= MICROBUS =================
+
+void drawMicrobus(float x, float y)
+{
+    // Body
+    glColor3f(0.85f, 0.65f, 0.1f);
+
+    drawRectangle(x, y, x + 8, y + 12);
+
+    // Top
+    glColor3f(0.9f, 0.75f, 0.2f);
+
+    drawRectangle(x + 1, y + 12, x + 7, y + 14);
+
+    // Front window
+    glColor3f(0.2f, 0.6f, 0.8f);
+
+    drawRectangle(x + 1, y + 8, x + 7, y + 11);
+
+    // Lower window
+    drawRectangle(x + 1, y + 4, x + 7, y + 7);
+
+    // Wheels
+    glColor3f(0.02f, 0.02f, 0.02f);
+
+    drawCircle(x + 1, y + 2, 1.2f);
+    drawCircle(x + 7, y + 2, 1.2f);
+}
+
+
+// ================= MOVE HORIZONTAL CARS =================
+
+void moveHorizontalCars()
 {
     float speed = 0;
 
-    // RED
     if (light == 0)
-    {
         speed = 0;
-    }
 
-    // YELLOW
     if (light == 1)
-    {
-        speed = 0.2;
-    }
+        speed = 0.2f;
 
-    // GREEN
     if (light == 2)
+        speed = 0.5f;
+
+
+    if (automatic == true &&
+        moveCar == true &&
+        pauseGame == false)
     {
-        speed = 0.5;
+        // If the car is already inside the intersection,
+        // allow it to leave completely.
+
+        if (light == 2)
+        {
+            car1 += speed;
+            car2 += speed;
+            car3 += speed;
+        }
+        else
+        {
+            // Car 1
+            if (car1 < -37 || car1 > 25)
+                car1 += speed;
+
+            // Car 2
+            if (car2 < -37 || car2 > 25)
+                car2 += speed;
+
+            // Car 3
+            if (car3 > 25)
+                car3 += speed;
+        }
     }
 
 
-    // AUTOMATIC MODE
-
-    if (automatic == true && moveCar == true && pauseGame == false)
-    {
-        car1 = car1 + speed;
-        car2 = car2 + speed;
-        car3 = car3 + speed;
-    }
-
-
-    // Bring cars back when they leave the screen
+    // Reset after leaving screen
 
     if (car1 > 100)
-    {
         car1 = -100;
-    }
 
     if (car2 > 100)
-    {
         car2 = -100;
-    }
 
     if (car3 > 100)
-    {
         car3 = -100;
+}
+
+
+// ================= MOVE VERTICAL VEHICLES =================
+
+void moveVerticalVehicles()
+{
+    float speed = 0;
+
+    if (verticalLight == 0)
+        speed = 0;
+
+    if (verticalLight == 1)
+        speed = 0.2f;
+
+    if (verticalLight == 2)
+        speed = 0.5f;
+
+
+    if (automatic == true &&
+        moveCar == true &&
+        pauseGame == false)
+    {
+        // BUS MOVES UP
+
+        if (verticalLight == 2)
+        {
+            busY += speed;
+        }
+        else
+        {
+            // If already near/inside intersection,
+            // keep moving until it clears.
+
+            if (busY < -37 || busY > 25)
+                busY += speed;
+        }
+
+
+        // MICROBUS MOVES DOWN
+
+        if (verticalLight == 2)
+        {
+            microbusY -= speed;
+        }
+        else
+        {
+            if (microbusY > 37 || microbusY < -25)
+                microbusY -= speed;
+        }
+    }
+
+
+    // Reset bus
+
+    if (busY > 110)
+        busY = -110;
+
+
+    // Reset microbus
+
+    if (microbusY < -110)
+        microbusY = 110;
+}
+
+
+// ================= EMERGENCY =================
+
+void moveEmergency()
+{
+    if (emergency == true &&
+        pauseGame == false)
+    {
+        emergencyX += 0.8f;
+
+        if (emergencyX > 110)
+        {
+            emergency = false;
+            emergencyX = -100;
+
+            // Normal traffic resumes
+            light = 0;
+            verticalLight = 2;
+            lightCount = 0;
+        }
     }
 }
 
@@ -216,32 +384,57 @@ void moveCars()
 
 void timer(int value)
 {
-    moveCars();
+    moveHorizontalCars();
+    moveVerticalVehicles();
+    moveEmergency();
+
     moveSun();
     moveMoon();
 
-    lightCount++;
+    // ================= EMERGENCY PRIORITY =================
 
-    // RED → GREEN
-    if (light == 0 && lightCount == 100)
+    if (emergency == true)
     {
+        // Horizontal side gets green
         light = 2;
-        lightCount = 0;
+
+        // Vertical side gets red
+        verticalLight = 0;
+    }
+    else
+    {
+        lightCount++;
+
+        // RED -> GREEN
+        if (light == 0 && lightCount >= 100)
+        {
+            light = 2;
+            verticalLight = 0;
+
+            lightCount = 0;
+        }
+
+        // GREEN -> YELLOW
+        if (light == 2 && lightCount >= 200)
+        {
+            light = 1;
+            verticalLight = 0;
+
+            lightCount = 0;
+        }
+
+        // YELLOW -> RED
+        if (light == 1 && lightCount >= 50)
+        {
+            light = 0;
+
+            // Vertical becomes GREEN
+            verticalLight = 2;
+
+            lightCount = 0;
+        }
     }
 
-    // GREEN → YELLOW
-    if (light == 2 && lightCount == 200)
-    {
-        light = 1;
-        lightCount = 0;
-    }
-
-    // YELLOW → RED
-    if (light == 1 && lightCount == 50)
-    {
-        light = 0;
-        lightCount = 0;
-    }
 
     glutPostRedisplay();
 
@@ -332,6 +525,9 @@ void keyboard(unsigned char key, int x, int y)
             car2 = -40;
             car3 = 20;
 
+            busY = 80;
+            microbusY = -80;
+
             selectedCar = 1;
 
             moveCar = true;
@@ -339,19 +535,41 @@ void keyboard(unsigned char key, int x, int y)
 
             automatic = true;
 
+            emergency = false;
+            emergencyX = -100;
+
             light = 0;
+            verticalLight = 2;
             lightCount = 0;
 
             break;
 
-        //Nightmode
 
+        // NIGHT MODE
         case 'n':
         case 'N':
 
-             toggleNight();
+            toggleNight();
 
-             break;
+            break;
+
+
+        // EMERGENCY
+        case 'e':
+        case 'E':
+
+            emergency = true;
+
+            // Emergency starts from left
+            emergencyX = -100;
+
+            // Give horizontal road priority
+            light = 2;
+            verticalLight = 0;
+
+            lightCount = 0;
+
+            break;
 
 
         // EXIT
@@ -418,7 +636,11 @@ void display()
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
+
     glColor3f(1.0f, 1.0f, 1.0f);
+
+
+    // SUN / MOON
 
     if (nightMode)
     {
@@ -429,9 +651,12 @@ void display()
         drawSun(sunX, sunY);
     }
 
+
+    // ENVIRONMENT
+
     drawPark(-100, -100);
     drawSchool(-80, -65);
-    drawLake(25,-100);
+    drawLake(25, -100);
 
     drawParkTree(-92, -45);
     drawParkTree(-35, -45);
@@ -439,64 +664,107 @@ void display()
     drawParkTree(-92, -85);
     drawParkTree(-35, -85);
 
-    // Horizontal road
+
+    // ================= HORIZONTAL ROAD =================
+
     glColor3f(0.2f, 0.2f, 0.2f);
+
     drawRectangle(-100, -25, 100, 25);
-    // Vertical road
+
+
+    // ================= VERTICAL ROAD =================
+
     drawRectangle(-25, -100, 25, 100);
 
-    // Sidewalks
+
+    // ================= SIDEWALKS =================
 
     glColor3f(0.7f, 0.7f, 0.7f);
+
     // Top-left
     drawRectangle(-100, 25, -25, 32);
+
     // Top-right
     drawRectangle(25, 25, 100, 32);
+
     // Bottom-left
     drawRectangle(-100, -32, -25, -25);
+
     // Bottom-right
     drawRectangle(25, -32, 100, -25);
 
-    //Environment
+
+    // ================= ENVIRONMENT =================
+
     drawOfficeBuilding(-90, 32);
-    drawHouse(-60,32);
-    drawApartment(35,32);
-    drawShop(70,32);
+    drawHouse(-60, 32);
+    drawApartment(35, 32);
+    drawShop(70, 32);
 
 
-    // LANE MARKINGS
+    // ================= LANE MARKINGS =================
 
     drawLaneMarking(-90, -1, -60, 1);
     drawLaneMarking(-50, -1, -20, 1);
     drawLaneMarking(20, -1, 50, 1);
     drawLaneMarking(60, -1, 90, 1);
 
-    //vertical
+
+    // VERTICAL
+
     drawLaneMarking(-1, 60, 1, 90);
     drawLaneMarking(-1, 20, 1, 50);
     drawLaneMarking(-1, -50, 1, -20);
     drawLaneMarking(-1, -90, 1, -60);
 
 
-    // ZEBRA CROSSINGS
+    // ================= ZEBRA CROSSINGS =================
+
     drawHorizontalCrosswalk(-12, 27);
     drawHorizontalCrosswalk(-12, -35);
+
     drawVerticalCrosswalk(27, -12);
     drawVerticalCrosswalk(-35, -12);
 
-    // Traffic Light
 
-    drawTrafficLight(30, 30);
+    // ================= TRAFFIC LIGHTS =================
 
-    // ================= THREE CARS =================
+    // Horizontal traffic light
+    drawTrafficLight(30, 30, light);
 
-    drawCar(car1, -10, 0.8f, 0.1f, 0.1f);   // Red car
-    drawCar(car2, -10, 0.1f, 0.3f, 0.8f);   // Blue car
-    drawCar(car3, 10, 0.1f, 0.7f, 0.2f);    // Green car
+    // Vertical traffic light
+    drawTrafficLight(-30, 30, verticalLight);
+
+
+    // ================= HORIZONTAL CARS =================
+
+    drawCar(car1, -10, 0.8f, 0.1f, 0.1f);
+
+    drawCar(car2, -10, 0.1f, 0.3f, 0.8f);
+
+    drawCar(car3, -10, 0.1f, 0.7f, 0.2f);
+
+
+    // ================= VERTICAL VEHICLES =================
+
+    // LEFT SIDE OF VERTICAL ROAD
+    drawBus(-18, busY);
+
+    // RIGHT SIDE OF VERTICAL ROAD
+    drawMicrobus(5, microbusY);
+
+
+    // ================= EMERGENCY VEHICLE =================
+
+    if (emergency == true)
+    {
+        drawAmbulance(emergencyX, -10);
+    }
 
 
     glFlush();
 }
+
 
 // ================= INIT =================
 
@@ -505,6 +773,7 @@ void init()
     glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
 
     glMatrixMode(GL_PROJECTION);
+
     glLoadIdentity();
 
     gluOrtho2D(-100, 100, -100, 100);
