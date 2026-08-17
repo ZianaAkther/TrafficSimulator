@@ -3,6 +3,8 @@
 #include <math.h>
 #include "emergency.h"
 
+bool emergency = false;
+float emergencyX = -100;
 
 void drawAmbulance(float x, float y)
 {
@@ -18,10 +20,7 @@ void drawAmbulance(float x, float y)
         glVertex2f(x, y + 8);
 
     glEnd();
-
-
     // ================= TOP =================
-
     glBegin(GL_QUADS);
 
         glVertex2f(x + 4, y + 8);
@@ -30,10 +29,7 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 5, y + 13);
 
     glEnd();
-
-
     // ================= RED STRIPE =================
-
     glColor3f(1.0f, 0.0f, 0.0f);
 
     glBegin(GL_QUADS);
@@ -44,10 +40,7 @@ void drawAmbulance(float x, float y)
         glVertex2f(x, y + 4.5f);
 
     glEnd();
-
-
     // ================= WINDOWS =================
-
     glColor3f(0.2f, 0.6f, 0.8f);
 
     // Front window
@@ -60,8 +53,6 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 5.5f, y + 12);
 
     glEnd();
-
-
     // Back window
 
     glBegin(GL_QUADS);
@@ -72,8 +63,6 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 8.5f, y + 12);
 
     glEnd();
-
-
     // ================= RED CROSS =================
 
     glColor3f(1.0f, 0.0f, 0.0f);
@@ -88,8 +77,6 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 13, y + 6);
 
     glEnd();
-
-
     // Horizontal part
 
     glBegin(GL_QUADS);
@@ -100,8 +87,6 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 11.5f, y + 4.5f);
 
     glEnd();
-
-
     // ================= WHEELS =================
 
     glColor3f(0.03f, 0.03f, 0.03f);
@@ -121,8 +106,6 @@ void drawAmbulance(float x, float y)
         }
 
     glEnd();
-
-
     glBegin(GL_TRIANGLE_FAN);
 
         glVertex2f(x + 14, y);
@@ -138,8 +121,6 @@ void drawAmbulance(float x, float y)
         }
 
     glEnd();
-
-
     // ================= EMERGENCY LIGHT =================
 
     glColor3f(1.0f, 0.0f, 0.0f);
@@ -152,4 +133,66 @@ void drawAmbulance(float x, float y)
         glVertex2f(x + 7, y + 14);
 
     glEnd();
+}
+
+void moveEmergency()
+{
+    if (emergency == false ||
+        pauseGame == true)
+    {
+        return;
+    }
+
+    float emergencySpeed = 0.8f;
+    bool blocked = false;
+
+    // Ambulance is on LOWER lane.
+    float ambulanceFront = emergencyX + 18.0f;
+    float safeDistance = 17.0f;
+
+
+    // ========================================================
+    // CHECK CAR 1
+    // ========================================================
+
+    if (car1 > emergencyX &&
+        car1 - ambulanceFront < safeDistance)
+    {
+        blocked = true;
+    }
+
+    // ========================================================
+    // CHECK CAR 2
+    // ========================================================
+
+    if (car2 > emergencyX &&
+        car2 - ambulanceFront < safeDistance)
+    {
+        blocked = true;
+    }
+
+    // ========================================================
+    // MOVE AMBULANCE
+    // ========================================================
+
+    if (blocked == false)
+    {
+        emergencyX += emergencySpeed;
+    }
+
+    // ========================================================
+    // EMERGENCY FINISHED
+    // ========================================================
+
+    if (emergencyX > 110)
+    {
+        emergency = false;
+        emergencyX = -100;
+
+        // Start normal cycle again from RED.
+        light = 0;
+        verticalLight = 2;
+
+        lightCount = 0;
+    }
 }

@@ -43,6 +43,12 @@
 			<Add directory="D:/Codeblocks/MinGW/x86_64-w64-mingw32/lib" />
 		</Linker>
 		<Unit filename="DayNight.cpp" />
+		<Unit filename="Environment.cpp" />
+		<Unit filename="Environment.h" />
+		<Unit filename="Traffic.cpp" />
+		<Unit filename="Traffic.h" />
+		<Unit filename="emergency.cpp" />
+		<Unit filename="emergency.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
