@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="TrafficSimulatorDemo" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/TrafficSimulatorDemo" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="D:/Codeblocks/MinGW/x86_64-w64-mingw32/bin" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/TrafficSimulatorDemo" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="D:/Codeblocks/MinGW/x86_64-w64-mingw32/bin" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="D:/Codeblocks/MinGW/x86_64-w64-mingw32/include" />
+		</Compiler>
+		<Linker>
+			<Add library="freeglut" />
+			<Add library="opengl32" />
+			<Add library="glu32" />
+			<Add library="winmm" />
+			<Add library="gdi32" />
+			<Add directory="D:/Codeblocks/MinGW/x86_64-w64-mingw32/lib" />
+		</Linker>
+		<Unit filename="DayNight.cpp" />
+		<Unit filename="DayNight.h" />
+		<Unit filename="Environment.cpp" />
+		<Unit filename="Environment.h" />
+		<Unit filename="Vehicles.cpp" />
+		<Unit filename="Vehicles.h" />
+		<Unit filename="emergency.cpp" />
+		<Unit filename="emergency.h" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
