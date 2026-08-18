@@ -914,3 +914,47 @@
 
 1787071917 d:\c++\computergraphics\trafficsimulatordemo\emergency.h
 
+1787088423 source:c:\users\asus vivobook\documents\github\trafficsimulator\emergency.cpp
+	<windows.h>
+	<GL/glut.h>
+	"emergency.h"
+
+1787088442 c:\users\asus vivobook\documents\github\trafficsimulator\emergency.h
+
+1787088448 source:c:\users\asus vivobook\documents\github\trafficsimulator\environment.cpp
+	<windows.h>
+	<GL/glut.h>
+	<math.h>
+	"Environment.h"
+
+1787088453 c:\users\asus vivobook\documents\github\trafficsimulator\environment.h
+
+1787091137 source:c:\users\asus vivobook\documents\github\trafficsimulator\vehicles.cpp
+	<windows.h>
+	<GL/glut.h>
+	<math.h>
+	"Vehicles.h"
+	"Environment.h"
+
+1787090858 c:\users\asus vivobook\documents\github\trafficsimulator\vehicles.h
+
+1787092393 source:c:\users\asus vivobook\documents\github\trafficsimulator\main.cpp
+	<windows.h>
+	<GL/glut.h>
+	<math.h>
+	"Environment.h"
+	"Vehicles.h"
+	"DayNight.h"
+	"emergency.h"
+
+1787088973 c:\users\asus vivobook\documents\github\trafficsimulator\daynight.h
+
+1787089670 source:c:\users\asus vivobook\documents\github\trafficsimulator\daynight.cpp
+	<windows.h>
+	<GL/glut.h>
+	<math.h>
+	<cstdlib>
+	<ctime>
+	"DayNight.h"
+	"Environment.h"
+
