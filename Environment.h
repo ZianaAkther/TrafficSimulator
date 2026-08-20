@@ -11,6 +11,7 @@ void drawLaneMarking(float x1, float y1, float x2, float y2);
 void drawHorizontalCrosswalk(float startX, float y);
 void drawVerticalCrosswalk(float x, float startY);
 void drawTrafficLight(float x, float y, int currentLight);
+void drawStreetLamp(float x, float y);
 
 // Park, School & Buildings
 void drawParkTree(float x, float y);

@@ -10,7 +10,14 @@ float sunY = 90.0f;
 float moonX = -90.0f;
 float moonY = 90.0f;
 
+const int MAX_RAINDROPS = 180;
+
+float rainX[MAX_RAINDROPS];
+float rainY[MAX_RAINDROPS];
+
+
 bool nightMode = false;
+bool rain = false;
 
 void drawSun(float x, float y) {
     glColor3f(1.0f, 0.85f, 0.1f);
@@ -75,4 +82,173 @@ void moveMoon()
 
 void toggleNight() {
     nightMode = !nightMode;
+}
+
+//RAIN FUNCTION STARTS HERE
+
+void initRain()
+{
+    /*
+        Rain is distributed over the ENTIRE screen.
+        Horizontal spacing keeps drops separated.
+        Vertical spacing keeps drops separated.
+    */
+
+    const float horizontalSpacing = 15.0f;
+    const float verticalSpacing = 11.0f;
+
+    const int columns = 14;
+    const int rows = 13;
+
+    int index = 0;
+
+    for (int row = 0; row < rows; row++)
+    {
+        for (int column = 0; column < columns; column++)
+        {
+            if (index >= MAX_RAINDROPS)
+                return;
+
+            // Stagger alternate rows
+            float offsetX;
+
+            if (row % 2 == 0)
+                offsetX = 0.0f;
+            else
+                offsetX = horizontalSpacing * 0.5f;
+
+            rainX[index] =
+                -100.0f +
+                column * horizontalSpacing +
+                offsetX;
+
+            rainY[index] =
+                100.0f -
+                row * verticalSpacing;
+
+            index++;
+        }
+    }
+}
+
+// START RAIN
+
+void startRain()
+{
+    // Immediately fill the entire screen with rain.
+    initRain();
+
+    rain = true;
+}
+
+// STOP RAIN
+void stopRain()
+{
+    rain = false;
+}
+
+// MOVE RAIN
+
+void moveRain()
+{
+    if (!rain)
+        return;
+
+    for (int i = 0; i < MAX_RAINDROPS; i++)
+    {
+        rainX[i] -= 0.35f;
+        rainY[i] -= 1.4f;
+
+        // ====================================================
+        // CONTINUOUS TOP/BOTTOM LOOP
+        //
+        // When a drop reaches the bottom, immediately place
+        // it at the TOP with a small variation.
+        //
+        // This prevents the upper part of the screen from
+        // becoming empty.
+        // ====================================================
+
+        if (rainY[i] < -105.0f)
+        {
+            rainY[i] = 105.0f;
+
+            rainX[i] -= 7.5f;
+
+            if (rainX[i] < -110.0f)
+            {
+                rainX[i] += 210.0f;
+            }
+        }
+
+        if (rainX[i] < -110.0f)
+        {
+            rainX[i] = 105.0f;
+        }
+    }
+}
+
+// ============================================================
+// DRAW RAIN
+// ============================================================
+
+void drawRain()
+{
+    if (!rain)
+        return;
+
+    // Light blue rain
+    glColor3f(
+        0.65f,
+        0.8f,
+        1.0f
+    );
+
+    // Small raindrops
+    glLineWidth(1.0f);
+
+    glBegin(GL_LINES);
+
+    for (int i = 0; i < MAX_RAINDROPS; i++)
+    {
+        // ====================================================
+        // SMALL /-SHAPED RAINDROP
+        //
+        // Top-right
+        //       /
+        //      /
+        // Bottom-left
+        // ====================================================
+
+        glVertex2f(
+            rainX[i],
+            rainY[i]
+        );
+
+        glVertex2f(
+            rainX[i] - 2.0f,
+            rainY[i] - 5.0f
+        );
+    }
+
+    glEnd();
+}
+void setSkyColor() {
+    if (rain) {
+        if (nightMode) {
+            // Dark stormy night sky
+            glClearColor(0.1f, 0.12f, 0.18f, 1.0f);
+        } else {
+            // Overcast greyish daylight sky
+            glClearColor(0.45f, 0.5f, 0.55f, 1.0f);
+        }
+    } else {
+        if (nightMode) {
+            // Clear night sky
+            glClearColor(0.03f, 0.05f, 0.15f, 1.0f);
+        } else {
+            // Clear day sky
+            glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
+        }
+    }
 }

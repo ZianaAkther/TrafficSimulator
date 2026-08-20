@@ -2,6 +2,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include "Environment.h"
+#include "DayNight.h"
 
 void drawRectangle(float left, float bottom, float right, float top) {
     glBegin(GL_QUADS);
@@ -49,7 +50,6 @@ void drawOfficeBuilding(float x, float y)
 {
     // Main building
     glColor3f(0.45f, 0.48f, 0.55f);
-
     glBegin(GL_QUADS);
 
     glVertex2f(x, y);
@@ -59,10 +59,8 @@ void drawOfficeBuilding(float x, float y)
 
     glEnd();
 
-
     // Roof / top section
     glColor3f(0.30f, 0.32f, 0.38f);
-
     glBegin(GL_QUADS);
 
     glVertex2f(x + 3, y + 42);
@@ -71,7 +69,6 @@ void drawOfficeBuilding(float x, float y)
     glVertex2f(x + 3, y + 46);
 
     glEnd();
-
 
     // Windows
     glColor3f(0.20f, 0.35f, 0.45f);
@@ -126,7 +123,6 @@ void drawApartment(float x, float y)
 {
     // Main building
     glColor3f(0.55f, 0.40f, 0.60f);
-
     glBegin(GL_QUADS);
 
     glVertex2f(x, y);
@@ -136,10 +132,8 @@ void drawApartment(float x, float y)
 
     glEnd();
 
-
     // Top roof
     glColor3f(0.30f, 0.25f, 0.35f);
-
     glBegin(GL_QUADS);
 
     glVertex2f(x - 2, y + 32);
@@ -148,7 +142,6 @@ void drawApartment(float x, float y)
     glVertex2f(x - 2, y + 35);
 
     glEnd();
-
 
     // Windows
     glColor3f(0.25f, 0.55f, 0.70f);
@@ -164,7 +157,6 @@ void drawApartment(float x, float y)
         glVertex2f(x + 4, wy + 4);
 
         glEnd();
-
 
         // Middle windows
         glBegin(GL_QUADS);
@@ -192,15 +184,12 @@ void drawShop(float x, float y) {
     // Body
     glColor3f(0.9f, 0.7f, 0.2f);
     drawRectangle(x, y, x + 25.0f, y + 20.0f);
-
     // Red Awning Striped Roof
     glColor3f(0.8f, 0.1f, 0.1f);
     drawRectangle(x - 1.0f, y + 18.0f, x + 26.0f, y + 23.0f);
-
     // Display Window & Entrance
     glColor3f(0.2f, 0.7f, 0.9f);
     drawRectangle(x + 2.0f, y + 4.0f, x + 12.0f, y + 14.0f);
-
     glColor3f(0.4f, 0.2f, 0.1f);
     drawRectangle(x + 16.0f, y, x + 22.0f, y + 14.0f);
 }
@@ -219,7 +208,6 @@ void drawParkTree(float x, float y) {
     // Trunk
     glColor3f(0.35f, 0.20f, 0.08f);
     drawParkRectangle(x - 1.0f, y, x + 1.0f, y + 8.0f);
-
     // Tree Crown
     glColor3f(0.10f, 0.45f, 0.15f);
     glBegin(GL_POLYGON);
@@ -287,16 +275,13 @@ void drawSchool(float x, float y) {
         glVertex2f(x + 17.5f, y + 38.0f);
         glVertex2f(x + 38.0f, y + 25.0f);
     glEnd();
-
     // Door
     glColor3f(0.25f, 0.15f, 0.08f);
     drawParkRectangle(x + 14.0f, y, x + 21.0f, y + 14.0f);
-
     // Windows
     glColor3f(0.15f, 0.50f, 0.70f);
     drawParkRectangle(x + 4.0f, y + 12.0f, x + 11.0f, y + 19.0f);
     drawParkRectangle(x + 24.0f, y + 12.0f, x + 31.0f, y + 19.0f);
-
     // Sign
     glColor3f(0.95f, 0.90f, 0.60f);
     drawParkRectangle(x + 11.0f, y + 26.0f, x + 24.0f, y + 30.0f);
@@ -322,33 +307,75 @@ void drawLakeWithWaves(float x1, float y1, float x2, float y2) {
     }
 }
 
+void drawStreetLamp(float x, float y)
+{
+    // POLE
+    glColor3f(0.12f, 0.12f, 0.12f);
+
+    // Vertical pole
+    glBegin(GL_QUADS);
+
+        glVertex2f(x - 0.8f, y);
+        glVertex2f(x + 0.8f, y);
+        glVertex2f(x + 0.8f, y + 15.0f);
+        glVertex2f(x - 0.8f, y + 15.0f);
+
+    glEnd();
+
+    // TOP ARM
+
+    glBegin(GL_QUADS);
+
+        glVertex2f(x - 0.8f, y + 14.0f);
+        glVertex2f(x + 5.0f, y + 14.0f);
+        glVertex2f(x + 5.0f, y + 15.0f);
+        glVertex2f(x - 0.8f, y + 15.0f);
+
+    glEnd();
+
+    // LAMP HEAD
+    if (nightMode)
+    {
+        // Bright light at night
+        glColor3f(1.0f, 1.0f, 0.4f);
+
+        drawCircle( x + 5.0f,y + 13.5f,2.0f);
+
+        // Small glow
+        glColor3f(0.8f, 0.75f, 0.25f);
+
+        drawCircle(x + 5.0f,y + 13.5f,3.2f);
+    }
+    else
+    {
+        // Lamp OFF during daytime
+        glColor3f(0.25f, 0.25f, 0.20f);
+
+        drawCircle(
+            x + 5.0f,
+            y + 13.5f,
+            1.8f
+        );
+    }
+}
+
 void drawStaticEnvironment() {
 
-    // 1. Base Park Area
     drawPark(-100.0f, -100.0f);
-
-    // 2. School Building placed neatly inside the park quadrant
     drawSchool(-80,-80);
-
-    // 3. Trees in Park
     drawParkTree(-85.0f, -50.0f);
     drawParkTree(-40.0f, -50.0f);
-
-    // Lake with Waves
     drawLakeWithWaves(25.0f, -100.0f, 100.0f, -25.0f);
-
-    // Main Roads
+    //roads
     glColor3f(0.2f, 0.2f, 0.2f);
     drawRectangle(-100.0f, -25.0f, 100.0f, 25.0f);
     drawRectangle(-25.0f, -100.0f, 25.0f, 100.0f);
-
     // Sidewalks
     glColor3f(0.7f, 0.7f, 0.7f);
     drawRectangle(-100.0f, 25.0f, -25.0f, 32.0f);
     drawRectangle(25.0f, 25.0f, 100.0f, 32.0f);
     drawRectangle(-100.0f, -32.0f, -25.0f, -25.0f);
     drawRectangle(25.0f, -32.0f, 100.0f, -25.0f);
-
     // Detailed Scenery Buildings
     drawOfficeBuilding(-90.0f, 32.0f);
     drawHouse(-60.0f, 32.0f);
@@ -371,6 +398,24 @@ void drawStaticEnvironment() {
     drawHorizontalCrosswalk(-12.0f, -35.0f);
     drawVerticalCrosswalk(27.0f, -12.0f);
     drawVerticalCrosswalk(-35.0f, -12.0f);
+
+    // STREETLAMPS
+
+    // Upper horizontal road
+    drawStreetLamp(-90.0f, 25.0f);
+    drawStreetLamp(-60.0f, 25.0f);
+    drawStreetLamp(-30.0f, 25.0f);
+    drawStreetLamp(35.0f, 25.0f);
+    drawStreetLamp(65.0f, 25.0f);
+    drawStreetLamp(90.0f, 25.0f);
+
+    // Lower horizontal road
+    drawStreetLamp(-85.0f, -32.0f);
+    drawStreetLamp(-55.0f, -32.0f);
+    drawStreetLamp(-30.0f, -32.0f);
+    drawStreetLamp(35.0f, -32.0f);
+    drawStreetLamp(65.0f, -32.0f);
+    drawStreetLamp(90.0f, -32.0f);
 }
 
 void drawTrafficLight(float x, float y, int currentLight) {

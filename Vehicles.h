@@ -6,5 +6,11 @@ void drawCar(float x, float y, float r, float g, float b);
 void drawBus(float x, float y);
 void drawMicrobus(float x, float y);
 void drawAmbulance(float x, float y);
+void drawBoat(float x, float y);
+
+//Vehicles Simulation
+void moveVerticalVehicles();
+void moveHorizontalCars();
+void moveBoats();
 
 #endif

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <GL/glut.h>
 #include <math.h>
+
 #include "Environment.h"
 #include "Vehicles.h"
 #include "DayNight.h"
@@ -13,6 +14,15 @@ float car3 = 80.0f;
 float busY = 105.0f;
 float microbusY = -105.0f;
 
+// Boats
+float boat1X = 35.0f;
+float boat1Y = -48.0f;
+bool boat1MovingRight = true;  // Boat 1 starts moving right
+
+float boat2X = 88.0f;
+float boat2Y = -78.0f;
+bool boat2MovingRight = false; // Boat 2 starts moving left
+
 // Controls & State
 bool pauseGame = false;
 
@@ -22,78 +32,13 @@ int verticalLight = 2;  // Vertical Light (Starts GREEN)
 int lightCount = 0;
 int previousLight = 0;
 
-// Vehicle Movement Helper
-bool canCrossStopLine(float currentPos, float newPos, float stopLine, bool isPositive) {
-    if (isPositive) {
-        if (currentPos < stopLine && newPos >= stopLine) return false;
-    } else {
-        if (currentPos > stopLine && newPos <= stopLine) return false;
-    }
-    return true;
-}
-
-void moveHorizontalCars() {
-    if (pauseGame) return;
-
-    // Pull Over Logic During Emergency
-    if (emergency) {
-        if (car1Y > -20.0f) car1Y -= 0.2f;
-        if (car2Y > -20.0f) car2Y -= 0.2f;
-        return;
-    } else {
-        if (car1Y < -10.0f) car1Y += 0.2f;
-        if (car2Y < -10.0f) car2Y += 0.2f;
-    }
-
-    float speed = (light == 1) ? 0.2f : 0.5f;
-    float minGap = 24.0f;
-
-    // Move Car 2 (Lead Car)
-    float newX2 = car2 + speed;
-    if (light == 2 || canCrossStopLine(car2, newX2, -37.0f, true)) {
-        car2 = newX2;
-    }
-
-    // Move Car 1 (Follower - Enforces Gap)
-    float newX1 = car1 + speed;
-    bool gapIsSafe = (car2 <= car1) || ((car2 - car1) >= minGap);
-
-    if ((light == 2 || canCrossStopLine(car1, newX1, -37.0f, true)) && gapIsSafe) {
-        car1 = newX1;
-    }
-
-    // Move Car 3 (Opposite Direction)
-    float newX3 = car3 - speed;
-    if (light == 2 || canCrossStopLine(car3, newX3, 25.0f, false)) {
-        car3 = newX3;
-    }
-
-    // Screen Boundary Wrap Around
-    if (car2 > 110.0f) car2 = -110.0f;
-    if (car1 > 110.0f) car1 = -110.0f;
-    if (car3 < -110.0f) car3 = 110.0f;
-}
-
-void moveVerticalVehicles() {
-    if (pauseGame || emergency) return;
-
-    float speed = (verticalLight == 1) ? 0.2f : 0.5f;
-
-    float newBusY = busY - speed;
-    if (verticalLight == 2 || canCrossStopLine(busY, newBusY, 40.0f, false)) {
-        busY = newBusY;
-    }
-
-    float newMicrobusY = microbusY + speed;
-    if (verticalLight == 2 || canCrossStopLine(microbusY, newMicrobusY, -44.0f, true)) {
-        microbusY = newMicrobusY;
-    }
-
-    if (busY < -110.0f) busY = 110.0f;
-    if (microbusY > 110.0f) microbusY = -110.0f;
-}
-
 void timer(int value) {
+    if (pauseGame) {
+        glutPostRedisplay();
+        glutTimerFunc(30, timer, 0);
+        return;
+    }
+
     if (emergency) {
         moveEmergency();
     } else {
@@ -127,11 +72,24 @@ void timer(int value) {
 
     moveHorizontalCars();
     moveVerticalVehicles();
+    moveBoats();
+
     moveSun();
     moveMoon();
+    moveRain();
 
     glutPostRedisplay();
     glutTimerFunc(30, timer, 0);
+}
+
+void mouse(int button, int state, int x, int y) {
+    if (state != GLUT_DOWN) return;
+
+    if (button == GLUT_LEFT_BUTTON) {
+        startRain();
+    } else if (button == GLUT_RIGHT_BUTTON) {
+        stopRain();
+    }
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -143,24 +101,33 @@ void keyboard(unsigned char key, int x, int y) {
             toggleNight();
             break;
         case 'e': case 'E':
-            emergency = true;
-            emergencyX = -115.0f;
-            light = 0;
-            verticalLight = 0; // Both directions set to RED during emergency
+            if (!pauseGame) {
+                emergency = true;
+                emergencyX = -115.0f;
+            }
             break;
-        case 'r': case 'R': // Complete System Reset
+        case 'r': case 'R':
             car1 = -80.0f; car1Y = -10.0f;
             car2 = -40.0f; car2Y = -10.0f;
             car3 = 80.0f;
             busY = 105.0f;
             microbusY = -105.0f;
+
+            boat1X = 35.0f; boat1Y = -48.0f;
+            boat2X = 88.0f; boat2Y = -78.0f;
+            boat1MovingRight = true;
+            boat2MovingRight = false;
+
             pauseGame = false;
             emergency = false;
             emergencyX = -115.0f;
+
             light = 0;
             verticalLight = 2;
             previousLight = 0;
             lightCount = 0;
+
+            stopRain();
             break;
         case 27:
             exit(0);
@@ -169,26 +136,27 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 void display() {
-    if (nightMode) glClearColor(0.03f, 0.05f, 0.15f, 1.0f);
-    else glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
 
+    setSkyColor();
     glClear(GL_COLOR_BUFFER_BIT);
 
     // 1. Celestial Bodies
-    if (nightMode) drawMoon(moonX, moonY);
-    else drawSun(sunX, sunY);
+    if (!rain) {
+        if (nightMode) drawMoon(moonX, moonY);
+        else drawSun(sunX, sunY);
+    }
 
     // 2. Environment
     drawStaticEnvironment();
 
-    // 3. Traffic Signals
-    drawTrafficLight(28.0f, 25.0f, light);
-    drawTrafficLight(-28.0f, -42.0f, verticalLight);
+    // 3. Traffic Signals (Force RED during emergency visually)
+    drawTrafficLight(28.0f, 25.0f, emergency ? 0 : light);
+    drawTrafficLight(-28.0f, -42.0f, emergency ? 0 : verticalLight);
 
     // 4. Vehicles
-    drawCar(car1, car1Y, 0.8f, 0.1f, 0.1f);  // Red Car
-    drawCar(car2, car2Y, 0.1f, 0.3f, 0.8f);  // Blue Car
-    drawCar(car3, 10.0f, 0.1f, 0.8f, 0.2f);   // Green Car
+    drawCar(car1, car1Y, 0.8f, 0.1f, 0.1f);
+    drawCar(car2, car2Y, 0.1f, 0.3f, 0.8f);
+    drawCar(car3, 10.0f, 0.1f, 0.8f, 0.2f);
 
     drawBus(-18.0f, busY);
     drawMicrobus(5.0f, microbusY);
@@ -197,6 +165,13 @@ void display() {
     if (emergency) {
         drawAmbulance(emergencyX, -6.0f);
     }
+
+    // 6. Rain
+    drawRain();
+
+    // 7. Boats
+    drawBoat(boat1X, boat1Y);
+    drawBoat(boat2X, boat2Y);
 
     glFlush();
 }
@@ -211,12 +186,12 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(900, 700);
-    glutCreateWindow("Automated Traffic Simulator");
+    glutCreateWindow("GoingMerry- InteractiveTraffic Simulator");
 
     init();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
-    // Note: glutSpecialFunc removed (no manual mode needed)
+    glutMouseFunc(mouse);
     glutTimerFunc(0, timer, 0);
 
     glutMainLoop();
